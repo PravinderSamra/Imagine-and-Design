@@ -149,35 +149,22 @@ python3 ~/.claude/skills/banana/scripts/hf_generate.py \
 
 ---
 
-## Image Editing Backend (fal.ai FLUX Kontext — img2img)
+## Image Editing Backend (Pollinations Kontext — img2img)
 
 ```bash
 python3 ~/.claude/skills/banana/scripts/img2img_generate.py \
   --image /path/to/source.jpg \
   --prompt "add a marble fireplace to the chimney breast" \
-  --aspect-ratio "4:3" \
-  --fal-key "$FAL_KEY"
+  --aspect-ratio "4:3"
 ```
+
+**Completely free. No API key. No signup.**
 
 ### How it works
 1. Uploads source image to [0x0.st](https://0x0.st) (free temporary hosting, no key needed)
-2. Submits edit job to fal.ai FLUX Kontext queue
-3. Polls until complete (~15–30s)
-4. Downloads and saves result PNG
-
-### Setup
-1. Sign up free at https://fal.ai
-2. Get API key: https://fal.ai/dashboard/keys
-3. Add to `~/.claude/settings.json`:
-```json
-{ "env": { "FAL_KEY": "your-key-here" } }
-```
-
-### Models available
-| Model | Quality | Cost |
-|-------|---------|------|
-| `fal-ai/flux-kontext/dev` | High (default) | ~$0.025/image |
-| `fal-ai/flux-pro/kontext` | Maximum | ~$0.04/image |
+2. Calls Pollinations `kontext` model — FLUX Kontext under the hood
+3. Returns edited image directly (no polling needed)
+4. Saves result PNG locally
 
 ### Prompt style for editing
 Write direct instructions, not descriptions:
@@ -220,9 +207,8 @@ Banana Creative Director
 
 | Key | Purpose | Where to get |
 |-----|---------|-------------|
-| `GOOGLE_AI_API_KEY` | Gemini image generation (requires billing) | https://aistudio.google.com/apikey |
+| `GOOGLE_AI_API_KEY` | Gemini image generation (requires billing — not currently used) | https://aistudio.google.com/apikey |
 | `HF_TOKEN` | HuggingFace (reserved, not currently used) | https://huggingface.co/settings/tokens |
-| `FAL_KEY` | fal.ai img2img editing (free credits on signup) | https://fal.ai/dashboard/keys |
 
 > Keys are stored in `~/.claude/settings.json` under the `env` section.
 
