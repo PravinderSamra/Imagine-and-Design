@@ -120,24 +120,98 @@ Use this whenever Gemini quota is exhausted or billing is not enabled. The banan
 
 ---
 
+## Auto-Routing: Text-to-Image vs Image-to-Image
+
+The banana skill automatically detects which backend to use:
+
+| Request type | Backend | Cost |
+|---|---|---|
+| Fresh idea, no source image | Pollinations FLUX (text-to-image) | Free |
+| Edit/modify an existing photo | fal.ai FLUX Kontext (img2img) | ~$0.04/image |
+
+**Text-to-image signals:** "generate", "create", "make me", "design", no image attached
+**Image-to-image signals:** image path provided, "edit", "change", "add to", "transform this photo"
+
+---
+
+## Free Generation Backend (Pollinations.ai — Text-to-Image)
+
+```bash
+python3 ~/.claude/skills/banana/scripts/hf_generate.py \
+  --prompt "your engineered prompt" \
+  --aspect-ratio "1:1"
+```
+
+- No API key required
+- FLUX model, 1024×1024 default
+- Supports all standard aspect ratios
+- Output: `~/Documents/nanobanana_generated/banana_flux_*.png`
+
+---
+
+## Image Editing Backend (fal.ai FLUX Kontext — img2img)
+
+```bash
+python3 ~/.claude/skills/banana/scripts/img2img_generate.py \
+  --image /path/to/source.jpg \
+  --prompt "add a marble fireplace to the chimney breast" \
+  --aspect-ratio "4:3" \
+  --fal-key "$FAL_KEY"
+```
+
+### How it works
+1. Uploads source image to [0x0.st](https://0x0.st) (free temporary hosting, no key needed)
+2. Submits edit job to fal.ai FLUX Kontext queue
+3. Polls until complete (~15–30s)
+4. Downloads and saves result PNG
+
+### Setup
+1. Sign up free at https://fal.ai
+2. Get API key: https://fal.ai/dashboard/keys
+3. Add to `~/.claude/settings.json`:
+```json
+{ "env": { "FAL_KEY": "your-key-here" } }
+```
+
+### Models available
+| Model | Quality | Cost |
+|-------|---------|------|
+| `fal-ai/flux-kontext/dev` | High (default) | ~$0.025/image |
+| `fal-ai/flux-pro/kontext` | Maximum | ~$0.04/image |
+
+### Prompt style for editing
+Write direct instructions, not descriptions:
+- ✅ "Replace the bare floorboards with plush cream carpet"
+- ✅ "Add a white marble fireplace with grey veining on the chimney breast"
+- ❌ "A room with cream carpet" (too descriptive, loses original photo)
+
+---
+
 ## Full Pipeline
 
 ```
-User idea
+User request
     ↓
-/banana generate "idea"
+/banana generate OR /banana edit
     ↓
 Banana Creative Director
-  - Reads gemini-models.md + prompt-engineering.md
-  - Analyses intent and selects domain mode
-  - Constructs 5-component prompt
+  - Analyses intent, selects domain mode
+  - Constructs 5-component engineered prompt
+  - Auto-detects: fresh image or photo edit?
     ↓
-hf_generate.py
-  - Sends engineered prompt to Pollinations.ai
-  - FLUX model generates image
-  - Saves PNG to ~/Documents/nanobanana_generated/
-    ↓
-Image displayed in Claude Code chat
+         ┌─────────────────────────────────────┐
+         │                                     │
+    No source image                    Source image provided
+         │                                     │
+    hf_generate.py                   img2img_generate.py
+  Pollinations FLUX                  fal.ai FLUX Kontext
+  (free, no key)                     (~$0.04/image, free credits)
+         │                                     │
+         └──────────────┬──────────────────────┘
+                        ↓
+              PNG saved to ~/Documents/nanobanana_generated/
+                        ↓
+              Displayed in Claude Code chat
 ```
 
 ---
@@ -148,8 +222,9 @@ Image displayed in Claude Code chat
 |-----|---------|-------------|
 | `GOOGLE_AI_API_KEY` | Gemini image generation (requires billing) | https://aistudio.google.com/apikey |
 | `HF_TOKEN` | HuggingFace (reserved, not currently used) | https://huggingface.co/settings/tokens |
+| `FAL_KEY` | fal.ai img2img editing (free credits on signup) | https://fal.ai/dashboard/keys |
 
-> Keys are stored in `~/.claude/settings.json` under the `env` and `mcpServers` sections.
+> Keys are stored in `~/.claude/settings.json` under the `env` section.
 
 ---
 
