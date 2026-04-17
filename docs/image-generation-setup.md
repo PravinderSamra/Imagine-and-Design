@@ -149,7 +149,7 @@ python3 ~/.claude/skills/banana/scripts/hf_generate.py \
 
 ---
 
-## Image Editing Backend (Pollinations Kontext — img2img)
+## Image Editing Backend (FLUX Kontext via HuggingFace Space — img2img)
 
 ```bash
 python3 ~/.claude/skills/banana/scripts/img2img_generate.py \
@@ -161,10 +161,12 @@ python3 ~/.claude/skills/banana/scripts/img2img_generate.py \
 **Completely free. No API key. No signup.**
 
 ### How it works
-1. Uploads source image to [0x0.st](https://0x0.st) (free temporary hosting, no key needed)
-2. Calls Pollinations `kontext` model — FLUX Kontext under the hood
-3. Returns edited image directly (no polling needed)
-4. Saves result PNG locally
+1. Reads source image and encodes as base64 (no upload host needed)
+2. Submits to `black-forest-labs/FLUX.1-Kontext-dev` HuggingFace Space via Gradio API
+3. Polls SSE stream for completion (~30–90s), retries up to 4× if Space is busy
+4. Downloads result WebP and saves locally
+
+> **Note:** Pollinations.ai moved the `kontext` model to their paid `enter.pollinations.ai` tier in April 2026. The HuggingFace Space is the free replacement — same FLUX Kontext model, no key required.
 
 ### Prompt style for editing
 Write direct instructions, not descriptions:
